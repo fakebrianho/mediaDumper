@@ -9,7 +9,7 @@ export default function HomePage() {
 
 	const handleSubmit = (e) => {
 		e.preventDefault()
-		if (password === process.env.NEXT_PUBLIC_APP_PASSWORD) {
+		if (password === process.env.APP_PASSWORD) {
 			router.push('/upload')
 		} else {
 			alert('Incorrect Password')
