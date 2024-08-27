@@ -3,11 +3,7 @@ import { NextResponse } from 'next/server'
 import formidable from 'formidable-serverless'
 import fs from 'fs'
 
-export const config = {
-	api: {
-		bodyParser: false,
-	},
-}
+// No need for export const config
 
 export async function POST(req) {
 	const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI } =
