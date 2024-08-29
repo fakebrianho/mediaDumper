@@ -55,7 +55,9 @@ function page(props) {
 	}
 
 	const uploadFile = async () => {
-		if (!files) return
+		if (files.length === 0) return
+		console.log(files)
+		console.log(!files, 'sdfafsf')
 		uploadButtonRef.current.innerHTML = 'Uploading'
 		const formData = new FormData()
 		formData.append('folderId', folderId)
