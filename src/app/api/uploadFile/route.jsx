@@ -41,7 +41,7 @@ const uploadFileToDrive = async (folderId, driveId, files) => {
 
 export async function POST(req) {
 	const res = await req.formData()
-	console.log('res', res)
+	// console.log('res', res)
 	const folderId = res.get('folderId')
 	const driveId = res.get('driveId')
 	// const file = res.get('file')

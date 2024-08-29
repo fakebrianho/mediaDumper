@@ -1,9 +1,11 @@
 import { google } from 'googleapis'
 import { NextResponse } from 'next/server'
 
-const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY
-const clientEmail = process.env.NEXT_PUBLIC_CLIENT_EMAIL
-const serviceAccountClientId = process.env.NEXT_PUBLIC_SERVICE_ACCOUNT_CLIENT_ID
+// const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY
+const privateKey = process.env.PRIVATE_KEY
+const clientEmail = process.env.CLIENT_EMAIL
+// const serviceAccountClientId = process.env.NEXT_PUBLIC_SERVICE_ACCOUNT_CLIENT_ID
+const serviceAccountClientId = process.env.CLIENT_ID
 
 export const authenticateGoogle = () => {
 	const auth = new google.auth.GoogleAuth({

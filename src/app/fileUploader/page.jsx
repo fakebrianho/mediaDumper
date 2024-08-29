@@ -59,13 +59,13 @@ function page(props) {
 		uploadButtonRef.current.innerHTML = 'Uploading'
 		const formData = new FormData()
 		formData.append('folderId', folderId)
-		console.log(files, 'preprocessed!')
+		// console.log(files, 'preprocessed!')
 		files.forEach((file, index) => {
 			formData.append(`files[${index}]`, file)
 		})
 		formData.append('file', file)
 		formData.append('driveId', driveId)
-		console.log(formData)
+		// console.log(formData)
 		const res = await fetch('/api/uploadFile', {
 			method: 'POST',
 			body: formData,
