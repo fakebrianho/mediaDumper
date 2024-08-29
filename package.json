@@ -1,40 +1,40 @@
 {
-  "name": "peaceprojectdump",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "canvas-confetti": "^1.9.3",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1",
-    "formidable": "^3.5.1",
-    "formidable-serverless": "^1.1.1",
-    "framer-motion": "^11.3.30",
-    "googleapis": "^143.0.0",
-    "gsap": "^3.12.5",
-    "lucide-react": "^0.436.0",
-    "mime": "^4.0.4",
-    "next": "14.2.7",
-    "next-themes": "^0.3.0",
-    "raw-body": "^3.0.0",
-    "react": "^18",
-    "react-dom": "^18",
-    "react-dropzone": "^14.2.3",
-    "stream": "^0.0.3",
-    "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
-  },
-  "devDependencies": {
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1"
-  },
-  "description": "This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).",
-  "main": "tailwind.config.js",
-  "author": "",
-  "license": "ISC"
+	"name": "peaceprojectdump",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "node myscript.js && next build",
+		"start": "next start",
+		"lint": "next lint"
+	},
+	"dependencies": {
+		"canvas-confetti": "^1.9.3",
+		"class-variance-authority": "^0.7.0",
+		"clsx": "^2.1.1",
+		"formidable": "^3.5.1",
+		"formidable-serverless": "^1.1.1",
+		"framer-motion": "^11.3.30",
+		"googleapis": "^143.0.0",
+		"gsap": "^3.12.5",
+		"lucide-react": "^0.436.0",
+		"mime": "^4.0.4",
+		"next": "14.2.7",
+		"next-themes": "^0.3.0",
+		"raw-body": "^3.0.0",
+		"react": "^18",
+		"react-dom": "^18",
+		"react-dropzone": "^14.2.3",
+		"stream": "^0.0.3",
+		"tailwind-merge": "^2.5.2",
+		"tailwindcss-animate": "^1.0.7"
+	},
+	"devDependencies": {
+		"postcss": "^8",
+		"tailwindcss": "^3.4.1"
+	},
+	"description": "This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).",
+	"main": "tailwind.config.js",
+	"author": "",
+	"license": "ISC"
 }
