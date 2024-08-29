@@ -2,7 +2,10 @@ import { google } from 'googleapis'
 import { NextResponse } from 'next/server'
 
 // const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY
-const privateKey = process.env.PRIVATE_KEY.replace(/\\n/gm, '\n')
+// const privateKey = process.env.PRIVATE_KEY.replace(/\\n/gm, '\n')
+const privateKey = Buffer.from(process.env.PRIVATE_KEY, 'base64').toString(
+	'ascii'
+)
 
 // const privateKey = process.env.PRIVATE_KEY
 const clientEmail = process.env.CLIENT_EMAIL
