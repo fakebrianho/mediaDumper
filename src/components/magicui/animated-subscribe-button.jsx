@@ -42,7 +42,7 @@ export const AnimatedSubscribeButton = ({
 			) : (
 				<motion.button
 					type='submit' // Added type='submit'
-					className='relative flex w-[200px] cursor-pointer items-center justify-center rounded-md border-none p-[10px]'
+					className='relative flex w-[200px] sm900:w-[120px] cursor-pointer items-center justify-center rounded-md border-none p-[10px] sm900:p-[9px]'
 					style={{
 						backgroundColor: buttonColor,
 						color: buttonTextColor,
@@ -54,7 +54,7 @@ export const AnimatedSubscribeButton = ({
 				>
 					<motion.span
 						key='reaction'
-						className='relative block font-semibold'
+						className='relative block font-semibold sm900:text-[18px] sm900:font-normal'
 						initial={{ x: 0 }}
 						exit={{ x: 50, transition: { duration: 0.1 } }}
 					>

@@ -34,9 +34,17 @@ function Login(props) {
 		})
 	}
 
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault()
-		if (password === process.env.NEXT_PUBLIC_APP_PASSWORD) {
+		const body = {
+			pw: password,
+		}
+		const res = await fetch('/api/password', {
+			method: 'POST',
+			body: JSON.stringify(body),
+		})
+		const data = await res.json()
+		if (res.status === 200) {
 			exitAnimation()
 		} else {
 			alert('Incorrect Password')
@@ -82,7 +90,7 @@ function Login(props) {
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							placeholder='Enter Password'
-							className='border-2 border-gray-300 rounded-md p-2 text-black placeholder: flex items-center justify-center'
+							className='border-2 border-gray-300 rounded-md p-2 text-black sm900:w-[300px]'
 						/>
 						<div className='w-[100px]'>
 							<AnimatedSubscribeButton

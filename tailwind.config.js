@@ -17,6 +17,9 @@ module.exports = {
 			},
 		},
 		extend: {
+			screens: {
+				sm900: { max: '900px' },
+			},
 			animation: {
 				ripple: 'ripple var(--duration,2s) ease calc(var(--i, 0)*.2s) infinite',
 				'spin-around':

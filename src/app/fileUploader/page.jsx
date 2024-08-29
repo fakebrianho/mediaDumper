@@ -56,18 +56,14 @@ function page(props) {
 
 	const uploadFile = async () => {
 		if (files.length === 0) return
-		console.log(files)
-		console.log(!files, 'sdfafsf')
 		uploadButtonRef.current.innerHTML = 'Uploading'
 		const formData = new FormData()
 		formData.append('folderId', folderId)
-		// console.log(files, 'preprocessed!')
 		files.forEach((file, index) => {
 			formData.append(`files[${index}]`, file)
 		})
 		formData.append('file', file)
 		formData.append('driveId', driveId)
-		// console.log(formData)
 		const res = await fetch('/api/uploadFile', {
 			method: 'POST',
 			body: formData,
@@ -75,7 +71,6 @@ function page(props) {
 		const data = await res.json()
 		const link = data.fileLink.webViewLink
 		if (res.status === 200) {
-			// success()
 			clearFiles()
 			uploadButtonRef.current.innerHTML = 'Upload Files'
 		}
@@ -191,12 +186,7 @@ function page(props) {
 							) : (
 								<ul ref={listRef} className='opacity-100'>
 									{files.map((file) => (
-										<li
-											// className='border-2'
-											key={file.path}
-										>
-											{file.path}
-										</li>
+										<li key={file.path}>{file.path}</li>
 									))}
 								</ul>
 							)}
