@@ -175,9 +175,5 @@ export async function POST(request) {
 	}
 }
 
-export const config = {
-	api: {
-		bodyParser: false,
-		responseLimit: false,
-	},
-}
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
