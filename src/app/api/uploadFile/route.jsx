@@ -43,8 +43,7 @@ export async function POST(req) {
 	const res = await req.formData()
 	const folderId = res.get('folderId')
 	const driveId = res.get('driveId')
-	// const file = res.get('file')
-	// const files = res.get('files')
+
 	const files = []
 	for (let i = 0; ; i++) {
 		const file = res.get(`files[${i}]`)
