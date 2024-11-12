@@ -1,33 +1,30 @@
 // app/api/uploadChunk/route.jsx
 import { NextResponse } from 'next/server'
 import { google } from 'googleapis'
+import { authenticateGoogle } from '../createFolder/route'
 
 const chunksStore = new Map()
 
-// Function to get a resumable upload URL from Google Drive
 async function getUploadUrl(auth, fileName, folderId) {
 	console.log('Creating file in Drive with params:', { fileName, folderId })
 
 	try {
-		// Get the access token
+		const drive = google.drive({ version: 'v3', auth })
 		const accessToken = await auth.getAccessToken()
 
-		// Make a POST request to initiate a resumable upload session
 		const response = await fetch(
 			'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
 			{
 				method: 'POST',
 				headers: {
-					Authorization: `Bearer ${accessToken}`,
+					Authorization: `Bearer ${accessToken.token}`,
 					'Content-Type': 'application/json',
 					'X-Upload-Content-Type': 'application/octet-stream',
 				},
 				body: JSON.stringify({
 					name: fileName,
 					parents: [folderId],
-					driveId: process.env.NEXT_PUBLIC_SHARED_DRIVE_ID,
 					supportsAllDrives: true,
-					supportsTeamDrives: true,
 				}),
 			}
 		)
@@ -38,6 +35,8 @@ async function getUploadUrl(auth, fileName, folderId) {
 		})
 
 		if (!response.ok) {
+			const errorText = await response.text()
+			console.error('Upload session initiation failed:', errorText)
 			throw new Error(
 				`Failed to initiate upload session: ${response.status} ${response.statusText}`
 			)
@@ -50,70 +49,44 @@ async function getUploadUrl(auth, fileName, folderId) {
 
 		return uploadUrl
 	} catch (error) {
-		console.error('Error getting upload URL:', error)
+		console.error('Detailed auth error:', error)
 		throw error
 	}
 }
 
-export async function POST(request) {
-	const clonedRequest = request.clone()
-
+export async function POST(req) {
 	try {
-		const formData = await request.formData()
+		const formData = await req.formData()
 		const chunk = formData.get('chunk')
 		const fileName = formData.get('fileName')
 		const chunkIndex = parseInt(formData.get('chunkIndex'))
-		const totalChunks = parseInt(formData.get('totalChunks'))
 		const fileId = formData.get('fileId')
 		const folderId = formData.get('folderId')
 
-		const chunkBuffer = Buffer.from(await chunk.arrayBuffer())
-		const chunkSize = chunkBuffer.length
-
-		let storedData = chunksStore.get(fileId)
-
-		// Initialize upload only if we don't have a valid upload URL
-		if (!storedData?.uploadUrl) {
-			console.log('Initializing new upload session for:', fileId)
-			const auth = new google.auth.GoogleAuth({
-				credentials: {
-					type: 'service_account',
-					private_key: process.env.NEXT_PUBLIC_PRIVATE_KEY?.replace(
-						/\\n/g,
-						'\n'
-					),
-					client_email: process.env.NEXT_PUBLIC_CLIENT_EMAIL,
-					client_id: process.env.NEXT_PUBLIC_CLIENT_ID,
-					token_uri: 'https://oauth2.googleapis.com/token',
-					universe_domain: 'googleapis.com',
-				},
-				scopes: [
-					'https://www.googleapis.com/auth/drive.file',
-					'https://www.googleapis.com/auth/drive',
-				],
-			})
-
-			const uploadUrl = await getUploadUrl(auth, fileName, folderId)
-			storedData = { uploadUrl, totalSize: 0 }
-			chunksStore.set(fileId, storedData)
+		if (!chunk || !fileName || isNaN(chunkIndex) || !fileId || !folderId) {
+			return NextResponse.json(
+				{ error: 'Missing required parameters' },
+				{ status: 400 }
+			)
 		}
 
-		const { uploadUrl, totalSize } = storedData
-		const start = totalSize
+		console.log('Folder ID being used:', folderId)
+
+		// Use the working authentication method
+		const auth = authenticateGoogle()
+
+		const chunkBuffer = Buffer.from(await chunk.arrayBuffer())
+		const chunkSize = chunkBuffer.length
+		const start = chunkIndex * chunkSize
 		const end = start + chunkSize - 1
-		const total = totalChunks * chunkSize
+		const total = chunkSize
 
-		console.log('Uploading chunk:', {
-			fileId,
-			chunkIndex,
-			start,
-			end,
-			total,
-			chunkSize,
-			uploadUrl: uploadUrl.substring(0, 50) + '...',
-		})
+		let uploadUrl = chunksStore.get(fileId)
+		if (!uploadUrl) {
+			uploadUrl = await getUploadUrl(auth, fileName, folderId)
+			chunksStore.set(fileId, uploadUrl)
+		}
 
-		// Upload the chunk
 		const uploadResponse = await fetch(uploadUrl, {
 			method: 'PUT',
 			headers: {
@@ -122,10 +95,6 @@ export async function POST(request) {
 				'Content-Type': 'application/octet-stream',
 			},
 			body: chunkBuffer,
-			query: {
-				supportsAllDrives: true,
-				supportsTeamDrives: true,
-			},
 		})
 
 		console.log('Upload response:', {
@@ -154,6 +123,13 @@ export async function POST(request) {
 				complete: true,
 			})
 		} else if (uploadResponse.status === 404) {
+			// Add detailed error logging
+			const errorResponse = await uploadResponse.text()
+			console.error(
+				'Upload session expired. Error details:',
+				errorResponse
+			)
+
 			// Clear the stored upload URL to force a new session
 			chunksStore.delete(fileId)
 
@@ -163,6 +139,7 @@ export async function POST(request) {
 					error: 'Upload session expired',
 					retry: true,
 					newSession: true,
+					details: errorResponse,
 				},
 				{ status: 404 }
 			)

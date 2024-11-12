@@ -29,73 +29,147 @@ function Page(props) {
 	const uploadButtonRef = useRef(null)
 	const confettiRef = useRef(null)
 
-	// Upload handling functions
-	const uploadFileChunks = async (file, folderId) => {
-		const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
-		const fileId = `${file.name}-${Date.now()}`
+	const testResumableUpload = async (file, folderId) => {
+		const chunkSize = CHUNK_SIZE // 5MB chunks
+		let uploadUrl = null
+		let bytesUploaded = 0
 
-		// Initialize progress for this file
-		setUploadProgress((prev) => ({
-			...prev,
-			[fileId]: 0,
-		}))
+		try {
+			console.log('Starting resumable upload for:', file.name)
 
-		for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-			const start = chunkIndex * CHUNK_SIZE
-			const end = Math.min(start + CHUNK_SIZE, file.size)
-			const chunk = file.slice(start, end)
+			// Step 1: Initialize or Resume Upload Session
+			const initResponse = await fetch('/api/uploadResumableTest', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'initialize',
+					fileName: file.name,
+					mimeType: file.type,
+					fileSize: file.size,
+					folderId,
+				}),
+			})
 
-			const formData = new FormData()
-			formData.append('chunk', chunk)
-			formData.append('fileName', file.name)
-			formData.append('chunkIndex', chunkIndex.toString())
-			formData.append('totalChunks', totalChunks.toString())
-			formData.append('fileId', fileId)
-			formData.append('folderId', folderId)
-			formData.append('driveId', driveId)
+			const initResult = await initResponse.json()
 
-			try {
-				const res = await fetch('/api/uploadChunk', {
+			if (!initResponse.ok || !initResult.uploadUrl) {
+				throw new Error('Failed to initialize upload session')
+			}
+
+			uploadUrl = initResult.uploadUrl
+			bytesUploaded = initResult.bytesUploaded || 0
+
+			console.log('Upload session initialized. Upload URL:', uploadUrl)
+			console.log('Resuming from byte:', bytesUploaded)
+
+			// Step 2: Upload the file in chunks
+			while (bytesUploaded < file.size) {
+				const chunk = file.slice(
+					bytesUploaded,
+					bytesUploaded + chunkSize
+				)
+				const chunkSizeActual = chunk.size
+				const chunkEnd = bytesUploaded + chunkSizeActual - 1
+
+				console.log(
+					`Uploading chunk: bytes ${bytesUploaded}-${chunkEnd} of ${file.size}`
+				)
+
+				const chunkBuffer = await chunk.arrayBuffer()
+				const uploadResponse = await fetch('/api/uploadResumableTest', {
 					method: 'POST',
-					body: formData,
+					headers: {
+						'Content-Type': file.type || 'application/octet-stream',
+						'Content-Range': `bytes ${bytesUploaded}-${chunkEnd}/${file.size}`,
+						'Upload-URL': uploadUrl,
+						Action: 'upload_chunk', // Include the 'Action' header
+					},
+					body: chunkBuffer,
 				})
 
-				if (!res.ok) {
-					const data = await res.json()
-					if (res.status === 404 && data.newSession) {
-						// Clear stored progress and restart the chunk upload
+				if (uploadResponse.ok) {
+					const uploadResult = await uploadResponse.json()
+					if (uploadResult.status === 'incomplete') {
+						// Update bytesUploaded
+						bytesUploaded += chunkSizeActual
+
+						// Update progress
+						const progress = (bytesUploaded / file.size) * 100
 						setUploadProgress((prev) => ({
 							...prev,
-							[fileId]: 0,
+							[file.name]: progress,
 						}))
-						chunkIndex = -1 // Will be incremented to 0 in next loop iteration
-						continue
+						setUploadStatus(
+							`Uploading ${file.name}: ${progress.toFixed(1)}%`
+						)
+					} else if (uploadResult.status === 'complete') {
+						// Upload complete
+						setUploadProgress((prev) => ({
+							...prev,
+							[file.name]: 100,
+						}))
+						setUploadStatus(`Upload complete for ${file.name}`)
+						console.log('Upload complete:', uploadResult)
+						return uploadResult
+					} else {
+						// Handle errors
+						throw new Error(
+							uploadResult.error || 'Unknown error during upload'
+						)
 					}
-					throw new Error(`Chunk upload failed: ${res.statusText}`)
+				} else {
+					// Handle HTTP errors
+					const errorText = await uploadResponse.text()
+					throw new Error(
+						`Upload failed with status ${uploadResponse.status}: ${errorText}`
+					)
 				}
-
-				// Update progress for this file
-				const progress = ((chunkIndex + 1) / totalChunks) * 100
-				setUploadProgress((prev) => ({
-					...prev,
-					[fileId]: progress,
-				}))
-
-				// Update status message
-				setUploadStatus(
-					`Uploading ${file.name}: ${progress.toFixed(1)}%`
-				)
-			} catch (error) {
-				console.error(
-					`Error uploading chunk ${chunkIndex} of ${file.name}:`,
-					error
-				)
-				setUploadStatus(`Error uploading ${file.name}`)
-				throw error
 			}
+		} catch (error) {
+			console.error('Upload failed:', error)
+			throw error
+		}
+	}
+	const TestUploadButton = ({ folderId }) => {
+		const [progress, setProgress] = useState(0)
+		const [status, setStatus] = useState('')
+
+		if (!folderId) {
+			return <div>Please select a folder first</div>
 		}
 
-		return fileId
+		return (
+			<div>
+				<button
+					onClick={() => {
+						const input = document.createElement('input')
+						input.type = 'file'
+						input.onchange = async (e) => {
+							const file = e.target.files[0]
+							if (file) {
+								try {
+									setStatus('Starting upload...')
+									const result = await testResumableUpload(
+										file,
+										folderId
+									)
+									setStatus('Upload complete!')
+									console.log('Final result:', result)
+								} catch (error) {
+									setStatus('Upload failed: ' + error.message)
+									console.error('Upload error:', error)
+								}
+							}
+						}
+						input.click()
+					}}
+					className='px-4 py-2 bg-blue-500 text-white rounded'
+				>
+					Test Resumable Upload
+				</button>
+				{status && <div className='mt-2 text-sm'>{status}</div>}
+			</div>
+		)
 	}
 
 	const uploadFile = async () => {
@@ -112,8 +186,20 @@ function Page(props) {
 			await Promise.all(
 				files.map(async (file) => {
 					try {
-						await uploadFileChunks(file, folderId)
+						// Initialize progress for this file
+						setUploadProgress((prev) => ({
+							...prev,
+							[file.name]: 0,
+						}))
+
+						await testResumableUpload(file, folderId)
 						setActiveUploads((prev) => prev - 1)
+
+						// Mark upload as complete
+						setUploadProgress((prev) => ({
+							...prev,
+							[file.name]: 100,
+						}))
 					} catch (error) {
 						console.error(`Failed to upload ${file.name}:`, error)
 						setUploadStatus(`Failed to upload ${file.name}`)
@@ -336,6 +422,7 @@ function Page(props) {
 								{activeUploads !== 1 ? 's' : ''} remaining
 							</div>
 						)}
+						<TestUploadButton folderId={folderId} />
 					</div>
 				</ShineBorder>
 			</div>
