@@ -65,7 +65,8 @@ export async function POST(req) {
 
 		// Use the shared drive folder ID as the parent
 		const parentFolderId = process.env.GOOGLE_FOLDER_ID // Your shared drive folder ID
-
+		console.log('parent', process.env.NEXT_PUBLIC_SHARED_DRIVE_ID)
+		console.log('parent2', process.env.GOOGLE_PROJECT_ID)
 		if (!parentFolderId) {
 			throw new Error('Parent folder ID not configured')
 		}
