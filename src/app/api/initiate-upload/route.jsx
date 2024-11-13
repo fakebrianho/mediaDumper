@@ -23,19 +23,14 @@ const drive = google.drive({ version: 'v3', auth })
 
 export async function POST(request) {
 	try {
-		const folderId = process.env.GOOGLE_FOLDER_ID
-		// let folderId
-		// if (!folderId) {
-		// throw new Error('GOOGLE_FOLDER_ID is not set')
-		// }
+		// const folderId = process.env.GOOGLE_FOLDER_ID
 
-		// const { filename, mimeType, fileSize, folderId } = await request.json()
-		const { filename, mimeType, fileSize } = await request.json()
+		const { filename, mimeType, fileSize, folderId } = await request.json()
 		console.log('Starting upload process for:', {
 			filename,
 			mimeType,
 			fileSize,
-			// folderId,
+			folderId,
 		})
 
 		// Get auth client for direct API calls
