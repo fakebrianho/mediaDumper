@@ -55,11 +55,11 @@ export async function POST(request) {
 			}
 		)
 
-		console.log('Session creation status:', sessionResponse.status)
-		console.log(
-			'Session headers:',
-			Object.fromEntries(sessionResponse.headers.entries())
-		)
+		// console.log('Session creation status:', sessionResponse.status)
+		// console.log(
+		// 	'Session headers:',
+		// 	Object.fromEntries(sessionResponse.headers.entries())
+		// )
 
 		if (!sessionResponse.ok) {
 			const errorText = await sessionResponse.text()

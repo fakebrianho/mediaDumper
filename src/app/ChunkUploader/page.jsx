@@ -51,7 +51,7 @@ export default function ChunkUploader() {
 		formData.append('uploadUrl', uploadUrl)
 		formData.append('start', start.toString())
 		formData.append('total', file.size.toString())
-
+		console.log(formData)
 		const response = await fetch('/api/upload-chunk', {
 			method: 'POST',
 			body: formData,
