@@ -2,7 +2,10 @@ import { google } from 'googleapis'
 import { NextResponse } from 'next/server'
 
 export const authenticateGoogle = () => {
-	const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+	// const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+	const privateKey = process.env.GOOGLE_PRIVATE_KEY
+		? process.env.GOOGLE_PRIVATE_KEY.split(String.raw`\n`).join('\n')
+		: undefined
 	const clientEmail = process.env.GOOGLE_CLIENT_EMAIL
 
 	console.log('Private Key Loaded:', !!privateKey)
