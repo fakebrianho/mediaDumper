@@ -4,9 +4,12 @@
 import { useState, useRef } from 'react'
 import CreateFolder from '../_fileUploader/components/CreateFolder'
 
-const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB chunks
+// const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB chunks
 // const driveId = process.env.GOOGLE_FOLDER_ID
 const driveId = process.env.NEXT_PUBLIC_SHARED_DRIVE_ID
+const CHUNK_SIZE = 256 * 1024 // 256KB chunks
+const MAX_RETRIES = 3
+const TIMEOUT_DURATION = 8000
 
 export default function ChunkUploader() {
 	const [file, setFile] = useState(null)
