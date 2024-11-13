@@ -3,20 +3,6 @@ import { NextResponse } from 'next/server'
 
 export const authenticateGoogle = () => {
 	const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
-	// const privateKey = process.env.GOOGLE_PRIVATE_KEY
-	// 	? process.env.GOOGLE_PRIVATE_KEY.split(String.raw`\n`).join('\n')
-	// 	: undefined
-	// const privateKey = process.env.GOOGLE_PRIVATE_KEY.split(
-	// 	String.raw`\n`
-	// ).join('\n')
-	// const privateKey = new Buffer(
-	// 	process.env.GOOGLE_PRIVATE_KEY,
-	// 	'base64'
-	// ).toString('ascii')
-	// const privateKey = Buffer.from(
-	// 	process.env.GOOGLE_PRIVATE_KEY,
-	// 	'base64'
-	// ).toString('utf-8')
 
 	const clientEmail = process.env.GOOGLE_CLIENT_EMAIL
 

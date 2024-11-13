@@ -1,141 +1,122 @@
+// app/api/initiate-upload/route.js
 import { google } from 'googleapis'
-import { NextResponse } from 'next/server'
 
-export const authenticateGoogle = () => {
-	const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-	const clientEmail = process.env.GOOGLE_CLIENT_EMAIL
-
-	// Enhanced environment variable checking
-	const envCheck = {
-		privateKey: !!privateKey,
-		clientEmail: !!clientEmail,
-		projectId: !!process.env.GOOGLE_PROJECT_ID,
-		privateKeyId: !!process.env.GOOGLE_PRIVATE_KEY_ID,
-		folderId: !!process.env.GOOGLE_FOLDER_ID,
-	}
-
-	console.log('Environment variables check:', envCheck)
-
-	if (!privateKey || !clientEmail) {
-		throw new Error('Missing required Google credentials')
-	}
-
-	const auth = new google.auth.GoogleAuth({
-		credentials: {
-			type: 'service_account',
-			private_key: privateKey,
-			client_email: clientEmail,
-			project_id: process.env.GOOGLE_PROJECT_ID,
-			private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-		},
-		scopes: ['https://www.googleapis.com/auth/drive'],
-	})
-	return auth
+const serviceAccount = {
+	type: 'service_account',
+	project_id: process.env.GOOGLE_PROJECT_ID,
+	private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
+	private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+	client_email: process.env.GOOGLE_CLIENT_EMAIL,
+	client_id: process.env.GOOGLE_CLIENT_ID,
+	auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+	token_uri: 'https://oauth2.googleapis.com/token',
+	auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+	client_x509_cert_url: process.env.GOOGLE_CERT_URL,
 }
 
-const uploadFolderToDrive = async (parentFolderId, folderName) => {
+const auth = new google.auth.GoogleAuth({
+	credentials: serviceAccount,
+	scopes: ['https://www.googleapis.com/auth/drive'],
+})
+
+const drive = google.drive({ version: 'v3', auth })
+
+export async function POST(request) {
 	try {
-		const auth = authenticateGoogle()
-		const drive = google.drive({ version: 'v3', auth })
+		const folderId = process.env.GOOGLE_FOLDER_ID
+		// let folderId
+		// if (!folderId) {
+		// throw new Error('GOOGLE_FOLDER_ID is not set')
+		// }
 
-		// Log the request parameters
-		console.log('Creating folder with params:', {
-			folderName,
-			parentFolderId,
-			env: {
-				hasPrivateKey: !!process.env.GOOGLE_PRIVATE_KEY,
-				hasClientEmail: !!process.env.GOOGLE_CLIENT_EMAIL,
-				hasProjectId: !!process.env.GOOGLE_PROJECT_ID,
-				hasFolderId: !!process.env.GOOGLE_FOLDER_ID,
-			},
+		// const { filename, mimeType, fileSize, folderId } = await request.json()
+		const { filename, mimeType, fileSize } = await request.json()
+		console.log('Starting upload process for:', {
+			filename,
+			mimeType,
+			fileSize,
+			// folderId,
 		})
 
-		const folder = await drive.files.create({
-			requestBody: {
-				name: folderName,
-				mimeType: 'application/vnd.google-apps.folder',
-				parents: [parentFolderId],
-			},
-			fields: 'id, name, mimeType',
-			supportsAllDrives: true,
-			supportsTeamDrives: true,
-		})
+		// Get auth client for direct API calls
+		const authClient = await auth.getClient()
+		const accessToken = await authClient.getAccessToken()
 
-		console.log('Folder creation response:', folder.data)
-		return { folder: folder.data }
-	} catch (error) {
-		console.error('Folder creation error:', {
-			message: error.message,
-			details: error.errors,
-			stack: error.stack,
-		})
-		throw error
-	}
-}
+		// Create resumable upload session
+		const sessionResponse = await fetch(
+			'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsAllDrives=true',
+			{
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${accessToken.token}`,
+					'Content-Type': 'application/json; charset=UTF-8',
+					'X-Upload-Content-Type': mimeType,
+					'X-Upload-Content-Length': String(fileSize),
+				},
+				body: JSON.stringify({
+					name: filename,
+					parents: [folderId],
+				}),
+			}
+		)
 
-export async function POST(req) {
-	console.log('POST request received to create folder')
+		console.log('Session creation status:', sessionResponse.status)
+		console.log(
+			'Session headers:',
+			Object.fromEntries(sessionResponse.headers.entries())
+		)
 
-	try {
-		const res = await req.json()
-		console.log('Request body:', res)
-
-		const { folderName } = res
-		if (!folderName) {
-			throw new Error('Folder name is required')
-		}
-
-		const parentFolderId = process.env.GOOGLE_FOLDER_ID
-		if (!parentFolderId) {
+		if (!sessionResponse.ok) {
+			const errorText = await sessionResponse.text()
 			throw new Error(
-				'GOOGLE_FOLDER_ID not configured in environment variables'
+				`Failed to create upload session: ${sessionResponse.status} - ${errorText}`
 			)
 		}
 
-		console.log('Creating folder:', {
-			folderName,
-			parentFolderId: parentFolderId.substring(0, 8) + '...', // Log partial ID for security
-		})
+		const uploadUrl = sessionResponse.headers.get('location')
+		if (!uploadUrl) {
+			throw new Error('No upload URL received from Google Drive API')
+		}
 
-		const { folder } = await uploadFolderToDrive(parentFolderId, folderName)
+		console.log('Successfully created upload session. URL received.')
 
-		return NextResponse.json(
+		return new Response(
+			JSON.stringify({
+				uploadUrl,
+				sessionData: {
+					filename,
+					mimeType,
+					totalSize: fileSize,
+					uploadedBytes: 0,
+				},
+			}),
 			{
-				success: true,
-				folder,
-				message: 'Folder created successfully',
-			},
-			{ status: 200 }
+				status: 200,
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			}
 		)
 	} catch (error) {
-		console.error('Folder creation failed:', {
-			error: error.message,
+		console.error('Upload session creation failed:', {
+			message: error.message,
+			name: error.name,
 			stack: error.stack,
-			type: error.constructor.name,
+			response: error.response?.data,
 		})
 
-		return NextResponse.json(
-			{
-				success: false,
+		return new Response(
+			JSON.stringify({
+				message: 'Failed to initiate upload session',
 				error: error.message,
-				details:
-					process.env.NODE_ENV === 'development'
-						? error.stack
-						: undefined,
-			},
-			{ status: 500 }
+				details: error.response?.data || error.stack,
+			}),
+			{
+				status: 500,
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			}
 		)
 	}
-}
-
-// Add OPTIONS handler for CORS
-export async function OPTIONS(req) {
-	return new NextResponse(null, {
-		status: 200,
-		headers: {
-			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'POST, OPTIONS',
-			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-		},
-	})
 }
