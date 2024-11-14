@@ -11,9 +11,10 @@ const CreateFolder = forwardRef((props, ref) => {
 				onChange={(e) => props.setFolderName(e.target.value)}
 			/>
 			<ShinyButton
-				text='Create Folder'
+				text={props.folderId ? 'Folder Created' : 'Create Folder'}
 				className='p-2 z-1000'
 				onClick={props.createFolder}
+				folderStatus={props.folderStatus}
 				ref={ref}
 			/>
 		</div>

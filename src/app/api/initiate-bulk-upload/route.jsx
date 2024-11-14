@@ -32,10 +32,6 @@ export async function POST(request) {
 	try {
 		// Expect an array of files
 		const { files, folderId } = await request.json()
-		// console.log('Starting bulk upload process for:', {
-		// 	fileCount: files.length,
-		// 	folderId,
-		// })
 
 		// Get single auth token for all files
 		const authClient = await getAuthClient()
