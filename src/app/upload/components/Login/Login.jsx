@@ -44,6 +44,7 @@ function Login(props) {
 			body: JSON.stringify(body),
 		})
 		const data = await res.json()
+		console.log(data)
 		if (res.status === 200) {
 			exitAnimation()
 		} else {
