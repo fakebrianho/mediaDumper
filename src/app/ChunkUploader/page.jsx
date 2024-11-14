@@ -120,110 +120,6 @@ export default function ChunkUploader() {
 		return response.json()
 	}
 
-	// const startBulkUpload = async () => {
-	// 	if (!files.length || uploading) return
-
-	// 	try {
-	// 		setUploading(true)
-	// 		setErrors({})
-
-	// 		// Create folder if name is provided
-	// 		const targetFolderId = folderName ? await createFolder() : folderId
-	// 		if (!targetFolderId) {
-	// 			throw new Error('No target folder selected')
-	// 		}
-
-	// 		// Initialize upload sessions for all files
-	// 		const initResponse = await fetch('/api/initiate-upload', {
-	// 			method: 'POST',
-	// 			headers: {
-	// 				'Content-Type': 'application/json',
-	// 			},
-	// 			body: JSON.stringify({
-	// 				files: files.map((file) => ({
-	// 					name: file.name,
-	// 					mimeType: file.type,
-	// 					size: file.size,
-	// 				})),
-	// 				folderId: targetFolderId,
-	// 			}),
-	// 		})
-
-	// 		if (!initResponse.ok) {
-	// 			throw new Error('Failed to initiate bulk upload')
-	// 		}
-
-	// 		const { sessions } = await initResponse.json()
-
-	// 		// Upload files sequentially to avoid overwhelming the server
-	// 		for (const [index, session] of sessions.entries()) {
-	// 			if (session.error) {
-	// 				setErrors((prev) => ({
-	// 					...prev,
-	// 					[session.filename]: session.error,
-	// 				}))
-	// 				continue
-	// 			}
-
-	// 			const file = files[index]
-	// 			let uploadedBytes = 0
-
-	// 			while (uploadedBytes < file.size) {
-	// 				const chunk = file.slice(
-	// 					uploadedBytes,
-	// 					uploadedBytes + CHUNK_SIZE
-	// 				)
-	// 				try {
-	// 					const response = await uploadChunk(
-	// 						chunk,
-	// 						uploadedBytes,
-	// 						session.uploadUrl,
-	// 						file.name,
-	// 						file.size
-	// 					)
-
-	// 					if (
-	// 						response.status === 200 ||
-	// 						response.status === 201
-	// 					) {
-	// 						setProgress((prev) => ({
-	// 							...prev,
-	// 							[file.name]: 100,
-	// 						}))
-	// 						break
-	// 					} else if (response.status === 308) {
-	// 						uploadedBytes = response.data.nextByte
-	// 						setProgress((prev) => ({
-	// 							...prev,
-	// 							[file.name]: Math.round(
-	// 								(uploadedBytes / file.size) * 100
-	// 							),
-	// 						}))
-	// 					}
-	// 				} catch (error) {
-	// 					setErrors((prev) => ({
-	// 						...prev,
-	// 						[file.name]: error.message,
-	// 					}))
-	// 					break
-	// 				}
-	// 			}
-	// 		}
-
-	// 		// If all uploads completed successfully, trigger confetti
-	// 		if (Object.values(progress).every((p) => p === 100)) {
-	// 			confettiRef.current?.fire()
-	// 		}
-	// 	} catch (error) {
-	// 		console.error('Bulk upload failed:', error)
-	// 		setErrors((prev) => ({
-	// 			...prev,
-	// 			general: error.message,
-	// 		}))
-	// 	} finally {
-	// 		setUploading(false)
-	// 	}
-	// }
 	const startBulkUpload = async () => {
 		if (!files.length || uploading) return
 
@@ -303,16 +199,7 @@ export default function ChunkUploader() {
 			setUploading(false)
 		}
 	}
-	// const [activeUploads, setActiveUploads] = useState(new Set())
-	// const [uploadStats, setUploadStats] = useState({
-	// 	total: 0,
-	// 	completed: 0,
-	// 	failed: 0,
-	// 	inProgress: 0,
-	// })
-	window.addEventListener('click', () => {
-		// confettiRef.current.fire()
-	})
+
 	return (
 		<div className='max-w-4xl mx-auto p-4'>
 			<Confetti
