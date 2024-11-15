@@ -6,8 +6,8 @@ export const authenticateGoogle = () => {
 
 	const clientEmail = process.env.GOOGLE_CLIENT_EMAIL
 
-	console.log('Private Key Loaded:', privateKey)
-	console.log('Client Email:', clientEmail)
+	// console.log('Private Key Loaded:', privateKey)
+	// console.log('Client Email:', clientEmail)
 
 	const auth = new google.auth.GoogleAuth({
 		credentials: {
@@ -28,11 +28,11 @@ const uploadFolderToDrive = async (parentFolderId, folderName) => {
 		const auth = authenticateGoogle()
 		const drive = google.drive({ version: 'v3', auth })
 
-		console.log('Creating folder:', {
-			name: folderName,
-			parentFolder: parentFolderId,
-			sharedDrive: process.env.GOOGLE_DRIVE_ID,
-		})
+		// console.log('Creating folder:', {
+		// 	name: folderName,
+		// 	parentFolder: parentFolderId,
+		// 	sharedDrive: process.env.GOOGLE_DRIVE_ID,
+		// })
 
 		const folder = await drive.files.create({
 			requestBody: {
@@ -45,7 +45,7 @@ const uploadFolderToDrive = async (parentFolderId, folderName) => {
 			supportsTeamDrives: true, // Legacy support
 		})
 
-		console.log('Folder created:', folder.data)
+		// console.log('Folder created:', folder.data)
 
 		return {
 			folder: folder.data,
@@ -67,8 +67,8 @@ export async function POST(req) {
 		// Use the shared drive folder ID as the parent
 		// const parentFolderId = process.env.GOOGLE_FOLDER_ID // Your shared drive folder ID
 		const parentFolderId = process.env.NEXT_PUBLIC_SHARED_DRIVE_ID // Your shared drive folder ID
-		console.log('parent', process.env.NEXT_PUBLIC_SHARED_DRIVE_ID)
-		console.log('parent2', process.env.GOOGLE_PROJECT_ID)
+		// console.log('parent', process.env.NEXT_PUBLIC_SHARED_DRIVE_ID)
+		// console.log('parent2', process.env.GOOGLE_PROJECT_ID)
 		if (!parentFolderId) {
 			throw new Error('Parent folder ID not configured')
 		}

@@ -13,9 +13,6 @@ export default function Home() {
 	const [status, setStatus] = useState('')
 	return (
 		<div className='relative flex h-screen w-full flex-col items-center justify-center overflow-hidden rounded-lg border bg-background md:shadow-xl'>
-			<p className='z-10 whitespace-pre-wrap text-center text-5xl font-medium tracking-tighter text-white'>
-				Ripple
-			</p>
 			<Ripple />
 			<div
 				className='flex items-center justify-center h-screen w-screen opacity-100 z-40'

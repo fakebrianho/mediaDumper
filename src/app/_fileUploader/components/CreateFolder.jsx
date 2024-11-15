@@ -2,7 +2,10 @@ import React, { forwardRef, useEffect } from 'react'
 import ShinyButton from '@/components/magicui/shiny-button'
 const CreateFolder = forwardRef((props, ref) => {
 	return (
-		<div ref={ref} className='opacity-100 top-11 relative'>
+		<div
+			ref={ref}
+			className='opacity-0 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+		>
 			<input
 				type='text'
 				placeholder='Folder Name'
